@@ -1,0 +1,66 @@
+<!--
+Copyright (c) 2019 The Khronos Group Inc.
+Use of this source code is governed by an MIT-style license that can be
+found in the LICENSE.txt file.
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>texture parameter TEXTURE_BASE_LEVEL conformance test</title>
+<link rel="stylesheet" href="../../../resources/js-test-style.css"/>
+<script src="../../../js/js-test-pre.js"></script>
+<script src="../../../js/webgl-test-utils.js"></script>
+</head>
+<body>
+<div id="description"></div>
+<canvas id="canvas" width="64" height="64"> </canvas>
+<div id="console"></div>
+
+<script id="fshader" type="x-shader/x-fragment">
+#version 300 es
+precision mediump float;
+uniform sampler2D tex;
+in vec2 texCoord;
+out vec4 fragColor;
+void main(void)
+{
+    fragColor = textureLod(tex, texCoord, 1.0);
+}
+</script>
+
+<script>
+"use strict";
+description("This test verifies the functionality of the texture parameter TEXTURE_BASE_LEVEL.");
+
+debug("");
+
+var wtu = WebGLTestUtils;
+var canvas = document.getElementById("canvas");
+var gl = wtu.create3DContext(canvas, null, 2);
+
+(function() {
+    var tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texStorage2D(gl.TEXTURE_2D, 3, gl.RGBA8, 4, 1);
+    // Fill level 0 with purple, level 1 with red, and level 2 with green
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 4, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([ 0xff, 0x00, 0xff, 0xff,  0xff, 0x00, 0xff, 0xff,  0xff, 0x00, 0xff, 0xff,  0xff, 0x00, 0xff, 0xff ]));
+    gl.texSubImage2D(gl.TEXTURE_2D, 1, 0, 0, 2, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([ 0xff, 0x00, 0x00, 0xff,  0xff, 0x00, 0x00, 0xff ]));
+    gl.texSubImage2D(gl.TEXTURE_2D, 2, 0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([ 0x00, 0xff, 0x00, 0xff ]));
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST);
+
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_BASE_LEVEL, 1);
+
+    wtu.setupProgram(gl, [wtu.simpleTextureVertexShaderESSL300, 'fshader']);
+    wtu.setupUnitQuad(gl);
+    wtu.clearAndDrawUnitQuad(gl);
+    wtu.checkCanvas(gl, [ 0, 0xff, 0, 0xff ], "texture should sample as green (level 2)");
+})();
+
+var successfullyParsed = true;
+</script>
+<script src="../../../js/js-test-post.js"></script>
+
+</body>
+</html>
